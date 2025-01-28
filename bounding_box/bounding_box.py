@@ -56,7 +56,7 @@ def _get_label_image(text, font_color_tuple_bgr, background_color_tuple_bgr, fon
 
     return np.concatenate(image).transpose(1, 2, 0)
 
-def add(image, left, top, right, bottom, label=None, color=None):
+def add(image, left, top, right, bottom, label=None, color=None, size=2):
     if type(image) is not _np.ndarray:
         raise TypeError("'image' parameter must be a numpy.ndarray")
     try:
@@ -86,13 +86,33 @@ def add(image, left, top, right, bottom, label=None, color=None):
     color, color_text = colors
 
     image_height, image_width, _ = image.shape
-    line_width_box = max(round(min(image_height, image_width) / 150), 2)
-
+    
+    # The line width of the box and the font size are calculated based on the image size and the vis_size
+    # vis_size is set by the user (0=XS, 1=S, 2=M, 3=L, 4=XL)
+    if size == 0: # XS
+        width_factor = 1 / 1200
+        font_factor = width_factor * 10
+    elif size == 1: # S
+        width_factor = 1 / 600
+        font_factor = width_factor * 8
+    elif size == 2: # M
+        width_factor = 1 / 300
+        font_factor = width_factor * 6
+    elif size == 3: # L
+        width_factor = 1 / 150
+        font_factor = width_factor * 4
+    elif size == 4: # XL
+        width_factor = 1 / 75
+        font_factor = width_factor * 2
+    
+    # calculate the line width of the box
+    line_width_box = max(round(min(image_height, image_width) * width_factor), 1)
     _cv2.rectangle(image, (left, top), (right, bottom), color, line_width_box)
 
     if label:
-
-        font_height = max(round(min(image_height, image_width) / 40), 15)
+        
+        # caluculate the font size
+        font_height = round(min(image_height, image_width) * font_factor)
         font = ImageFont.truetype(_FONT_PATH, font_height)
 
         label_image =  _get_label_image(label, color_text, color, font)
